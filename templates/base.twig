@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{{ page_title }} | Company name</title>
+    <link rel="shortcut icon" href="/public/images/favicon.png" type="image/png">
+    <link rel="stylesheet" href="/public/styles/normalize.css">
+    <link rel="stylesheet" href="/public/styles/styles.css">
+</head>
+<body class="no-js">
+
+{% include 'sections/header.twig' %}
+
+{% block body %} {% endblock %}
+
+{% include 'sections/footer.twig' %}
+
+<script src="/public/scripts/scripts.js"></script>
+</body>
+</html>

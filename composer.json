@@ -1,0 +1,28 @@
+{
+    "name": "vashkevich/omicrontest.local",
+    "description": "Omicron Slim task",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "Vashkevich\\OmicrontestLocal\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "dimalepel",
+            "email": "dimalepel@mail.ru"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "slim/slim": "4.*",
+        "slim/psr7": "^0.6.0",
+        "twig/twig": "^2.13",
+        "ext-pdo": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Omicron\\": "src/"
+        }
+    }
+}

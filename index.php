@@ -1,171 +1,53 @@
 <?php
-class Discount {
-  public $title;
-  public $days;
-  public $price;
-  public $download;
-  public $speed;
-  public $description;
-  public $flag;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Factory\AppFactory;
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
+use Omicron\DiscountMapper;
 
-  public function __construct($title, $days, $price, $download, $speed, $description, $flag = false) {
-    $this->title = $title;
-    $this->days = $days;
-    $this->price = $price;
-    $this->download = $download;
-    $this->speed = $speed;
-    $this->description = $description;
-    $this->flag = $flag;
-  }
+require __DIR__ . '/vendor/autoload.php';
+/*
+ * Add Twig templates
+ */
+$loader = new FilesystemLoader('templates');
+$view = new Environment($loader);
+
+/*
+ * Add config connect db
+ */
+$config = include 'config/database.php';
+$dsn = $config['dsn'];
+$username = $config['username'];
+$password = $config['password'];
+
+/*
+ * Checks the connection error
+ */
+try {
+  $connection = new PDO($dsn, $username, $password);
+  $connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  $connection->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+} catch (PDOException $exception) {
+  echo 'Database error' . $exception->getMessage();
+  exit();
 }
 
-$discounts = [
-  new Discount('Hosting1', 'XXXX Days Retention - U.S. + E.U. Servers', '$x.xx/mo for 1yr', 'Unlimited downloads', 'Unlimited speed', ['
-    All the Lorem Ipsum generators on the Internet tend to repeat predefined chunks as necessary
-'], true),
-  new Discount('Hosting2', 'XXXX Days Retention - U.S. + E.U. Servers', '$x.xx/mo for 1yr', 'Unlimited downloads', 'Unlimited speed', ['
-    All the Lorem Ipsum generators on the Internet tend to repeat predefined chunks as necessary
-'], true),
-  new Discount('Hosting3', 'XXXX Days Retention - U.S. + E.U. Servers', '$x.xx/mo for 1yr', 'Unlimited downloads', 'Unlimited speed', ['
-    All the Lorem Ipsum generators on the Internet tend to repeat predefined chunks as necessary
-']),
-];
-?>
+/*
+ * Add DiscountMapper class
+ */
+$discountMapper = new DiscountMapper($connection);
 
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Company name</title>
-  <link rel="stylesheet" href="styles/normalize.css">
-  <link rel="stylesheet" href="styles/styles.css">
-</head>
-<body class="no-js">
-  <header class="page-header">
-    <div class="container page-header__container">
-      <a class="logo page-header__logo" href="/">
-        <img class="logo__picture" src="images/pic-logo.png" alt="">
-      </a>
-      <button class="menu-toggler js-menu-toggler" type="button">
-        <span class="visually-hidden">Переключатель мобильного меню</span>
-        <span class="menu-toggler__icon">
-          <span class="menu-toggler__icon-line"></span>
-        </span>
-      </button>
-      <nav class="navigation">
-        <ul class="main-menu main-menu--horisontal">
-          <li class="main-menu__item">
-            <a class="main-menu__link" href="#">Home</a>
-          </li>
-          <li class="main-menu__item">
-            <a class="main-menu__link" href="#">About Us</a>
-          </li>
-          <li class="main-menu__item">
-            <a class="main-menu__link" href="#">Software</a>
-          </li>
-          <li class="main-menu__item">
-            <a class="main-menu__link" href="#">Pricing</a>
-          </li>
-        </ul>
-        <a class="button page-header__button" href="#">Get Started</a>
-      </nav>
-    </div>
-  </header>
+$app = AppFactory::create();
 
-  <main class="page-content">
-    <section class="promo">
-      <div class="container">
-        <h1 class="promo__title">What is Lorem Ipsum?</h1>
-        <p class="promo__description">Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
-        <a class="button promo__button" href="#">Button</a>
-      </div>
-    </section>
-    <section class="advantages">
-      <h2 class="visually-hidden">Advantages</h2>
-      <ul class="container advantages__list">
-        <li class="advantages__item">Contrary to popular belief, Lorem <br>Ipsum is not simply random text</li>
-        <li class="advantages__item">Lorem ipsum dolor sit amet, <br>consectetur adipiscing elit</li>
-        <li class="advantages__item">The standard chunk of Lorem Ipsum <br>used since the 1500s is reproduced</li>
-      </ul>
-    </section>
-    <article class="container content">
-      <h2>Where does it come from?</h2>
-      <p>It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).</p>
-      <h2>Where can I get some?</h2>
-      <p>There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text. </p>
-    </article>
-    <section class="discount">
-      <div class="container discount__container">
-        <h2 class="discount__title">Discounts</h2>
-        <ul class="discount__list">
+$app->get('/', function (Request $request, Response $response, $args) use ($view, $discountMapper) {
+  $discounts = $discountMapper->getDiscountList();
+  $body = $view->render('home.twig', [
+    'discounts' => $discounts,
+    'page_title' => 'Home page'
+  ]);
+  $response->getBody()->write($body);
+  return $response;
+});
 
-          <?php foreach ($discounts as $item) : ?>
-            <li class="discount-item<?php if ($item->flag) echo ' discount-item--true'; ?> discount__item">
-              <div class="discount-item__header">
-                <h3 class="discount-item__title"><?php echo $item->title; ?></h3>
-                <p class="discount-item__days"><?php echo $item->days; ?></p>
-                <a class="button discount-item__more" href="#">Button</a>
-              </div>
-              <ul class="discount-item__advantages">
-                <li class="discount-item__advantages-item discount-item__advantages-item--price"><?php echo $item->price; ?></li>
-                <li class="discount-item__advantages-item discount-item__advantages-item--download"><?php echo $item->download; ?></li>
-                <li class="discount-item__advantages-item discount-item__advantages-item--speed"><?php echo $item->speed; ?></li>
-              </ul>
-              <ul class="discount-item__detail">
-                <?php foreach ($item->description as $desc) {
-                  echo '<li class="discount-item__detail-item">'.$desc.'</li>';
-                } ?>
-              </ul>
-            </li>
-          <?php endforeach; ?>
-
-        </ul>
-      </div>
-    </section>
-    <section class="faq container">
-      <h2 class="faq__title">FAQ’s</h2>
-      <ul class="faq__list js-accordion">
-        <li class="faq-item faq__item">
-          <h3 class="faq-item__title js-accordion__title">Why do we use it?</h3>
-          <div class="faq-item__content">
-            <p>It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English.</p>
-          </div>
-        </li>
-        <li class="faq-item faq__item">
-          <h3 class="faq-item__title js-accordion__title">Where can I get some?</h3>
-          <div class="faq-item__content">
-            <p>There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing </p>
-          </div>
-        </li>
-        <li class="faq-item faq__item">
-          <h3 class="faq-item__title js-accordion__title">Where does it come from?</h3>
-          <div class="faq-item__content">
-            <p>Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections</p>
-          </div>
-        </li>
-      </ul>
-    </section>
-  </main>
-
-  <footer class="page-footer">
-    <div class="container page-footer__grid">
-      <p class="page-footer__copyright">2021 All rights reserved</p>
-      <ul class="footer-menu page-footer__menu">
-        <li class="footer-menu__item">
-          <a class="footer-menu__link" href="#">Privacy Policy</a>
-        </li>
-        <li class="footer-menu__item">
-          <a class="footer-menu__link" href="#">Terms of Service</a>
-        </li>
-        <li class="footer-menu__item">
-          <a class="footer-menu__link" href="#">Copyright Policy</a>
-        </li>
-      </ul>
-    </div>
-  </footer>
-
-  <script src="scripts/scripts.js"></script>
-</body>
-</html>
+$app->run();

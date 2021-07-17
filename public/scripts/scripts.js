@@ -1,16 +1,22 @@
 (function () {
-  // Для отключенного js
+  /*
+   * For disabled js
+   */
   const body = document.querySelector('body');
   body.classList.remove('no-js');
 
-  // Для мобильного меню
+  /*
+   * For the mobile menu
+   */
   const menuToogle = document.querySelector('.js-menu-toggler');
   menuToogle.addEventListener('click', function (e) {
     this.classList.toggle('active');
     e.preventDefault();
   });
 
-  // Аккордион
+  /*
+   * Accordion
+   */
   const accordionList = document.querySelector('.js-accordion');
   const accordionToggles = accordionList.querySelectorAll('.js-accordion__title');
   accordionToggles.forEach(function(item, i, arr) {
